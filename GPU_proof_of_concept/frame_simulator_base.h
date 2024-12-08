@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <cstddef>
 
 // Base class for both CPU and GPU implementations
 class FrameSimulatorBase {

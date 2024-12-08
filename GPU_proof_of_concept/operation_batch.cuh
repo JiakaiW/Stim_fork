@@ -4,8 +4,10 @@
 #include <cstdint>
 
 class OperationBatch {
-private:
+public:
     static constexpr size_t MAX_BATCH = 1024;
+
+private:
     std::vector<size_t> targets;
     std::vector<size_t> controls;
     size_t num_ops;

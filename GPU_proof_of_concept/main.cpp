@@ -63,7 +63,9 @@ int main() {
         {10000, 100000} // Large case
     };
     
-    for (const auto& [num_qubits, batch_size] : test_cases) {
+    for (const auto& test_case : test_cases) {
+        size_t num_qubits = test_case.first;
+        size_t batch_size = test_case.second;
         std::cout << "\nTesting with " << num_qubits << " qubits and batch size " 
                   << batch_size << "\n";
         std::cout << "----------------------------------------\n";
