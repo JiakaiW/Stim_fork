@@ -1,0 +1,32 @@
+# Build directories
+build/
+out/
+cmake-build*/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Compiled files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+Makefile
+
+# CUDA compiled files
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin 

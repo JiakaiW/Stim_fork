@@ -1,4 +1,81 @@
-# GPU Frame Simulator Demo
+# GPU QEC Benchmark
+
+This is a proof-of-concept implementation of quantum error correction (QEC) simulation on GPU.
+
+## Overview
+
+The project implements frame-based simulation of quantum error correction codes, with both CPU and GPU implementations for performance comparison. The main focus is on repetition codes and surface codes.
+
+## Building
+
+### Prerequisites
+
+- CMake 3.8 or higher
+- CUDA Toolkit 11.0 or higher
+- C++20 compatible compiler for host code
+- C++17 compatible NVCC for device code
+
+### Build Steps
+
+1. Clone the repository with Stim submodule:
+```bash
+git clone --recursive <repository-url>
+```
+
+2. Build Stim first:
+```bash
+mkdir build && cd build
+cmake ..
+make
+cd ..
+```
+
+3. Create and enter the build directory:
+```bash
+cd GPU_proof_of_concept
+mkdir build
+cd build
+```
+
+4. Configure with CMake:
+```bash
+cmake ..
+```
+
+5. Build the project:
+```bash
+make
+```
+
+This will build:
+- `qec_benchmark`: The main benchmark executable
+- `qec_test`: The test executable
+
+### Build Structure
+
+The project is organized into three main components:
+
+1. `stim_core`: A static library containing the core Stim functionality needed for QEC simulation
+2. `cuda_impl`: A static library containing the CUDA implementation of frame simulation
+3. Executables:
+   - `qec_benchmark`: For performance benchmarking
+   - `qec_test`: For running tests
+
+The build system is configured to use:
+- C++20 for host code (Stim and main executables)
+- C++17 for device code (CUDA implementation)
+
+### Common Build Issues
+
+1. CUDA Architecture: By default, the build targets compute capability 7.5. If your GPU has a different architecture, modify `CMAKE_CUDA_ARCHITECTURES` in CMakeLists.txt.
+
+2. Compiler Compatibility: Ensure your host compiler is compatible with C++20 and NVCC supports C++17.
+
+3. Include Paths: If you encounter include path issues, verify that:
+   - Stim source files are present in the expected location
+   - The include paths in CMakeLists.txt match your directory structure
+
+## Usage
 
 This is a standalone proof-of-concept implementation of a GPU-accelerated frame simulator. It demonstrates the potential speedup of using GPU parallelization for quantum circuit simulation.
 
@@ -7,22 +84,40 @@ This is a standalone proof-of-concept implementation of a GPU-accelerated frame 
 - CUDA Toolkit (tested with CUDA 11.5)
 - C++17 compiler
 - NVIDIA GPU with compute capability 7.5 or higher
+- CMake (for building Stim)
+
+## Building Stim Library
+First, build Stim as a library:
+```bash
+# (navigate to the Stim directory)
+cd ..
+
+# Create build directory and build Stim without Python bindings
+mkdir build && cd build
+cmake -DBUILD_PYTHON_BINDINGS=OFF ..
+make # This will take a while (10-20 minutes)
+
+# Return to GPU_proof_of_concept directory
+cd ../../GPU_proof_of_concept
+```
 
 ## Compilation
 
-1. **Basic Operations Testing**
+1. **QEC Code Benchmark with Stim**
 ```bash
-# Compile the basic tests
-nvcc testing.cpp frame_simulator_cpu.cpp frame_simulator_gpu.cu cuda_kernels.cu operation_batch.cu -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -std=c++17 -o testing
-```
-
-2. **QEC Code Benchmark**
-```bash
-# Compile the QEC benchmark
-nvcc qec_benchmark.cpp frame_simulator_cpu.cpp frame_simulator_gpu.cu cuda_kernels.cu operation_batch.cu -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -std=c++17 -o qec_benchmark
+# Compile the QEC benchmark (assuming Stim is in ../Stim)
+nvcc qec_benchmark.cpp frame_simulator_cpu.cpp frame_simulator_gpu.cu cuda_kernels.cu operation_batch.cu \
+    -I../Stim/src \
+    -L../Stim/build \
+    -lstim \
+    -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -std=c++17 \
+    -o qec_benchmark
 ```
 
 ### Compilation Flags Explained
+- `-I../Stim/src`: Include path for Stim headers
+- `-L../Stim/build`: Path to built Stim library
+- `-lstim`: Link against Stim library
 - `-Xcompiler -O3`: Enable high optimization level for host code
 - `-Xcompiler -Wall`: Enable all warnings for host code
 - `-Xptxas -O3`: Enable high optimization level for device code
@@ -30,40 +125,11 @@ nvcc qec_benchmark.cpp frame_simulator_cpu.cpp frame_simulator_gpu.cu cuda_kerne
 
 ## Running the Benchmarks
 
-### 1. Basic Operations Testing
-```bash
-./testing
-```
-This runs basic benchmarks comparing CPU vs GPU performance for:
-- ZCX (controlled-X) gates
-- Hadamard gates
-- Different problem sizes:
-  - Small: 100 qubits, 1000 shots
-  - Medium: 1000 qubits, 10000 shots
-  - Large: 10000 qubits, 100000 shots
-
-Example output:
-```
-Testing with 100 qubits and batch size 1000
-----------------------------------------
-Benchmarking ZCX operations...
-CPU time: 0.31ms
-GPU time: 4.48ms
-Speedup: 0.07x
-
-Benchmarking H operations...
-CPU time: 0.15ms
-GPU time: 0.75ms
-Speedup: 0.20x
-
-[... more results for larger sizes ...]
-```
-
-### 2. QEC Code Benchmark
+### QEC Code Benchmark
 ```bash
 ./qec_benchmark
 ```
-This simulates repetition code cycles, comparing CPU vs GPU performance for:
+This simulates repetition code cycles, comparing CPU vs GPU vs Original Stim performance for:
 - Different code distances (25, 50, 75)
 - Fixed batch size (100,000 simulations)
 - Each test runs 1000 QEC cycles
@@ -72,21 +138,27 @@ Example output from NVIDIA RTX 3090:
 ```
 Testing repetition code with distance 25 and batch size 100000
 ----------------------------------------
+Original Frame Simulator time: 91.46ms
 CPU time: 91.46ms
 GPU time: 8.62ms
-Speedup: 10.61x
+GPU Speedup vs CPU: 10.61x
+GPU Speedup vs Original: 10.61x
 
 Testing repetition code with distance 50 and batch size 100000
 ----------------------------------------
+Original Frame Simulator time: 254.69ms
 CPU time: 254.69ms
 GPU time: 0.76ms
-Speedup: 334.92x
+GPU Speedup vs CPU: 334.92x
+GPU Speedup vs Original: 334.92x
 
 Testing repetition code with distance 75 and batch size 100000
 ----------------------------------------
+Original Frame Simulator time: 363.38ms
 CPU time: 363.38ms
 GPU time: 0.59ms
-Speedup: 620.35x
+GPU Speedup vs CPU: 620.35x
+GPU Speedup vs Original: 620.35x
 ```
 
 ## Implementation Details

@@ -3,6 +3,8 @@
 #include <vector>
 #include "frame_simulator_cpu.h"
 #include "frame_simulator_gpu.h"
+#include "../src/stim/gen/gen_rep_code.h"
+#include "../src/stim/simulators/frame_simulator.h"
 
 // Helper function to measure execution time
 template<typename Func>
@@ -50,7 +52,33 @@ void runRepCodeCycle(FrameSimulatorBase& sim, const std::vector<size_t>& data_qu
     }
 }
 
-void runQECBenchmark(size_t distance, size_t batch_size, size_t num_rounds) {
+double runOriginalFrameSimBenchmark(size_t distance, size_t batch_size, size_t num_rounds) {
+    // Generate repetition code circuit
+    stim::CircuitGenParameters params(
+        num_rounds,                    // rounds: uint64_t
+        static_cast<uint32_t>(distance), // distance: uint32_t
+        std::string("memory"));         // task: std::string
+    auto circuit = stim::generate_rep_code_circuit(params).circuit;
+    
+    // Initialize simulator
+    std::mt19937_64 rng(0);  // Fixed seed for reproducibility
+    auto stats = circuit.compute_stats();
+    stim::FrameSimulator<64> sim(
+        stats, 
+        stim::FrameSimulatorMode::STORE_DETECTIONS_TO_MEMORY,
+        batch_size,
+        std::move(rng));
+
+    // Run benchmark
+    double time = measureTime([&]() {
+        sim.do_circuit(circuit);
+    });
+    
+    std::cout << "Original Frame Simulator time: " << time << "ms\n";
+    return time;  // Return the time for comparison
+}
+
+void runQECBenchmark(size_t distance, size_t batch_size, size_t num_rounds, double orig_time) {
     // For distance d, we need d data qubits and (d-1) measurement qubits
     size_t num_data = distance;
     size_t num_measurements = distance - 1;
@@ -92,7 +120,8 @@ void runQECBenchmark(size_t distance, size_t batch_size, size_t num_rounds) {
     
     std::cout << "CPU time: " << cpu_time << "ms\n";
     std::cout << "GPU time: " << gpu_time << "ms\n";
-    std::cout << "Speedup: " << cpu_time/gpu_time << "x\n";
+    std::cout << "GPU Speedup vs CPU: " << cpu_time/gpu_time << "x\n";
+    std::cout << "GPU Speedup vs Original: " << orig_time/gpu_time << "x\n";
 }
 
 int main() {
@@ -109,7 +138,12 @@ int main() {
         std::cout << "\nTesting repetition code with distance " << distance 
                   << " and batch size " << batch_size << "\n";
         std::cout << "----------------------------------------\n";
-        runQECBenchmark(distance, batch_size, 1000);  // Run 1000 QEC cycles
+        
+        // Run original frame simulator benchmark and get its time
+        double orig_time = runOriginalFrameSimBenchmark(distance, batch_size, 1000);
+        
+        // Run our CPU/GPU implementation benchmark with the original time
+        runQECBenchmark(distance, batch_size, 1000, orig_time);
     }
     
     return 0;

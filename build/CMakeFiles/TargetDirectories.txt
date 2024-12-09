@@ -1,0 +1,11 @@
+/home/kai/Github/Stim_fork/build/CMakeFiles/stim.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/libstim.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/stim_perf.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/stim_test.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/stim_test_o3.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/edit_cache.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/rebuild_cache.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/list_install_components.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/install.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/install/local.dir
+/home/kai/Github/Stim_fork/build/CMakeFiles/install/strip.dir
