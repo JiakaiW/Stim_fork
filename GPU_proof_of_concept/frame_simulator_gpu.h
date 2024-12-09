@@ -27,4 +27,8 @@ public:
     void do_H(size_t target) override;
     void do_M(size_t target) override;
     std::vector<bool> get_measurement_results(size_t target_idx) override;
+    void queue_ZCX(size_t control, size_t target);
+    void queue_M(size_t target);
+    void execute_queued_operations();
+    void queue_H(size_t target);
 }; 

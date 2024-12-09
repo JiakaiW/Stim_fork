@@ -30,75 +30,49 @@ void FrameSimulatorGPU::freeMemory() {
     cudaFree(d_measurements);
 }
 
-void FrameSimulatorGPU::do_ZCX(size_t control, size_t target) {
+void FrameSimulatorGPU::queue_ZCX(size_t control, size_t target) {
     op_batch.add_two_qubit_op(control, target);
-    if (op_batch.size() >= OperationBatch::MAX_BATCH) {
-        flush_zcx_batch();
+}
+
+void FrameSimulatorGPU::queue_M(size_t target) {
+    op_batch.add_single_qubit_op(target);
+}
+
+void FrameSimulatorGPU::queue_H(size_t target) {
+    op_batch.add_single_qubit_op(target, OpType::H);
+}
+
+void FrameSimulatorGPU::execute_queued_operations() {
+    if (op_batch.size() > 0) {
+        op_batch.upload_to_device();
+        
+        dim3 grid(op_batch.size());
+        dim3 block(num_words);
+        
+        batch_operations_kernel<<<grid, block>>>(
+            d_x_table, d_z_table, d_measurements,
+            op_batch.get_device_controls(),
+            op_batch.get_device_targets(),
+            op_batch.get_device_op_types(),
+            op_batch.size(), num_words);
+        
+        op_batch.clear();
     }
 }
 
-void FrameSimulatorGPU::do_H(size_t target) {
-    op_batch.add_single_qubit_op(target);
-    if (op_batch.size() >= OperationBatch::MAX_BATCH) {
-        flush_h_batch();
-    }
+void FrameSimulatorGPU::do_ZCX(size_t control, size_t target) {
+    queue_ZCX(control, target);
+    execute_queued_operations();  // For backward compatibility, execute immediately
 }
 
 void FrameSimulatorGPU::do_M(size_t target) {
-    op_batch.add_single_qubit_op(target);
-    if (op_batch.size() >= OperationBatch::MAX_BATCH) {
-        flush_m_batch();
-    }
+    queue_M(target);
+    execute_queued_operations();  // For backward compatibility, execute immediately
 }
 
-void FrameSimulatorGPU::flush_zcx_batch() {
-    if (op_batch.size() > 0) {
-        op_batch.upload_to_device();
-        
-        // Each block handles one operation, each thread handles one word
-        dim3 grid(op_batch.size());
-        dim3 block(num_words);
-        
-        zcx_kernel<<<grid, block>>>(
-            d_x_table, d_z_table,
-            op_batch.get_device_controls(),
-            op_batch.get_device_targets(),
-            op_batch.size(), num_words);
-        
-        op_batch.clear();
-    }
-}
-
-void FrameSimulatorGPU::flush_h_batch() {
-    if (op_batch.size() > 0) {
-        op_batch.upload_to_device();
-        
-        dim3 grid(op_batch.size());
-        dim3 block(num_words);
-        
-        hadamard_kernel<<<grid, block>>>(
-            d_x_table, d_z_table,
-            op_batch.get_device_targets(),
-            op_batch.size(), num_words);
-        
-        op_batch.clear();
-    }
-}
-
-void FrameSimulatorGPU::flush_m_batch() {
-    if (op_batch.size() > 0) {
-        op_batch.upload_to_device();
-        
-        dim3 grid(op_batch.size());
-        dim3 block(num_words);
-        
-        measure_kernel<<<grid, block>>>(
-            d_x_table, d_measurements,
-            op_batch.get_device_targets(),
-            op_batch.size(), num_words);
-        
-        op_batch.clear();
-    }
+void FrameSimulatorGPU::do_H(size_t target) {
+    queue_H(target);
+    execute_queued_operations();  // For backward compatibility, execute immediately
 }
 
 std::vector<bool> FrameSimulatorGPU::get_measurement_results(size_t target_idx) {

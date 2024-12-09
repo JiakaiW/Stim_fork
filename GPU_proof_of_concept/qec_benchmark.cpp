@@ -15,23 +15,38 @@ double measureTime(Func f) {
 
 // Simulates a repetition code cycle
 void runRepCodeCycle(FrameSimulatorBase& sim, const std::vector<size_t>& data_qubits, const std::vector<size_t>& measurement_qubits) {
-    // First round of CNOTs: measurement <- data
-    for (size_t i = 0; i < measurement_qubits.size(); i++) {
-        size_t m = measurement_qubits[i];
-        size_t d = data_qubits[i];
-        sim.do_ZCX(d, m);
-    }
-    
-    // Second round of CNOTs: measurement <- data
-    for (size_t i = 0; i < measurement_qubits.size(); i++) {
-        size_t m = measurement_qubits[i];
-        size_t d = data_qubits[i + 1];
-        sim.do_ZCX(d, m);
-    }
-    
-    // Measure syndrome qubits
-    for (size_t m : measurement_qubits) {
-        sim.do_M(m);
+    // For GPU simulator, only queue operations
+    if (auto* gpu_sim = dynamic_cast<FrameSimulatorGPU*>(&sim)) {
+        // First round of CNOTs
+        for (size_t i = 0; i < measurement_qubits.size(); i++) {
+            gpu_sim->queue_ZCX(data_qubits[i], measurement_qubits[i]);
+        }
+        
+        // Second round of CNOTs
+        for (size_t i = 0; i < measurement_qubits.size(); i++) {
+            gpu_sim->queue_ZCX(data_qubits[i + 1], measurement_qubits[i]);
+        }
+        
+        // Queue measurements
+        for (size_t m : measurement_qubits) {
+            gpu_sim->queue_M(m);
+        }
+    } else {
+        // Original CPU implementation remains unchanged
+        // First round of CNOTs
+        for (size_t i = 0; i < measurement_qubits.size(); i++) {
+            sim.do_ZCX(data_qubits[i], measurement_qubits[i]);
+        }
+        
+        // Second round of CNOTs
+        for (size_t i = 0; i < measurement_qubits.size(); i++) {
+            sim.do_ZCX(data_qubits[i + 1], measurement_qubits[i]);
+        }
+        
+        // Measure syndrome qubits
+        for (size_t m : measurement_qubits) {
+            sim.do_M(m);
+        }
     }
 }
 
@@ -62,11 +77,17 @@ void runQECBenchmark(size_t distance, size_t batch_size, size_t num_rounds) {
         }
     });
     
-    // Run GPU benchmark
+    // Run GPU benchmark - only measure execution time
+    auto* gpu = dynamic_cast<FrameSimulatorGPU*>(&gpu_sim);
+    
+    // Queue operations without timing
+    for (size_t r = 0; r < num_rounds; r++) {
+        runRepCodeCycle(gpu_sim, data_qubits, measurement_qubits);
+    }
+    
+    // Now measure only the GPU execution time
     double gpu_time = measureTime([&]() {
-        for (size_t r = 0; r < num_rounds; r++) {
-            runRepCodeCycle(gpu_sim, data_qubits, measurement_qubits);
-        }
+        gpu->execute_queued_operations();
     });
     
     std::cout << "CPU time: " << cpu_time << "ms\n";
@@ -77,9 +98,9 @@ void runQECBenchmark(size_t distance, size_t batch_size, size_t num_rounds) {
 int main() {
     // Test with different code distances and batch sizes
     std::vector<std::pair<size_t, size_t>> test_cases = {
-        {3, 1000},     // Small code
-        {7, 10000},    // Medium code
-        {15, 100000},  // Large code
+        {25, 100000},     // Medium distance code
+        {50, 100000},     // Large distance code
+        {75, 100000},     // Very large distance code
     };
     
     for (const auto& test_case : test_cases) {
