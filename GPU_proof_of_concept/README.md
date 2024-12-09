@@ -22,7 +22,7 @@ The project implements frame-based simulation of quantum error correction codes,
 git clone --recursive <repository-url>
 ```
 
-2. Build Stim first:
+2. Build Stim first: (takes 20 minutes)
 ```bash
 mkdir build && cd build
 cmake ..
@@ -30,21 +30,14 @@ make
 cd ..
 ```
 
-3. Create and enter the build directory:
+3. Build the project: (takes about 1 minute)
 ```bash
 cd GPU_proof_of_concept
+rm -rf build
 mkdir build
 cd build
-```
-
-4. Configure with CMake:
-```bash
 cmake ..
-```
-
-5. Build the project:
-```bash
-make
+make -j
 ```
 
 This will build:
@@ -79,87 +72,36 @@ The build system is configured to use:
 
 This is a standalone proof-of-concept implementation of a GPU-accelerated frame simulator. It demonstrates the potential speedup of using GPU parallelization for quantum circuit simulation.
 
-## Prerequisites
-
-- CUDA Toolkit (tested with CUDA 11.5)
-- C++17 compiler
-- NVIDIA GPU with compute capability 7.5 or higher
-- CMake (for building Stim)
-
-## Building Stim Library
-First, build Stim as a library:
-```bash
-# (navigate to the Stim directory)
-cd ..
-
-# Create build directory and build Stim without Python bindings
-mkdir build && cd build
-cmake -DBUILD_PYTHON_BINDINGS=OFF ..
-make # This will take a while (10-20 minutes)
-
-# Return to GPU_proof_of_concept directory
-cd ../../GPU_proof_of_concept
-```
-
-## Compilation
-
-1. **QEC Code Benchmark with Stim**
-```bash
-# Compile the QEC benchmark (assuming Stim is in ../Stim)
-nvcc qec_benchmark.cpp frame_simulator_cpu.cpp frame_simulator_gpu.cu cuda_kernels.cu operation_batch.cu \
-    -I../Stim/src \
-    -L../Stim/build \
-    -lstim \
-    -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -std=c++17 \
-    -o qec_benchmark
-```
-
-### Compilation Flags Explained
-- `-I../Stim/src`: Include path for Stim headers
-- `-L../Stim/build`: Path to built Stim library
-- `-lstim`: Link against Stim library
-- `-Xcompiler -O3`: Enable high optimization level for host code
-- `-Xcompiler -Wall`: Enable all warnings for host code
-- `-Xptxas -O3`: Enable high optimization level for device code
-- `-std=c++17`: Use C++17 standard
-
 ## Running the Benchmarks
 
 ### QEC Code Benchmark
 ```bash
-./qec_benchmark
-```
-This simulates repetition code cycles, comparing CPU vs GPU vs Original Stim performance for:
-- Different code distances (25, 50, 75)
-- Fixed batch size (100,000 simulations)
-- Each test runs 1000 QEC cycles
-
-Example output from NVIDIA RTX 3090:
+./qec_benchmark #Normal mode (minimal output):
+./qec_benchmark --debug #Detailed debug output
 ```
 Testing repetition code with distance 25 and batch size 100000
 ----------------------------------------
-Original Frame Simulator time: 91.46ms
-CPU time: 91.46ms
-GPU time: 8.62ms
-GPU Speedup vs CPU: 10.61x
-GPU Speedup vs Original: 10.61x
+Original Frame Simulator time: 1774.72ms
+CPU time: 1359.41ms
+GPU time: 2.03919ms
+GPU Speedup vs CPU: 666.645x
+GPU Speedup vs Original: 870.306x
 
 Testing repetition code with distance 50 and batch size 100000
 ----------------------------------------
-Original Frame Simulator time: 254.69ms
-CPU time: 254.69ms
-GPU time: 0.76ms
-GPU Speedup vs CPU: 334.92x
-GPU Speedup vs Original: 334.92x
+Original Frame Simulator time: 3929.9ms
+CPU time: 2788.49ms
+GPU time: 1.39765ms
+GPU Speedup vs CPU: 1995.13x
+GPU Speedup vs Original: 2811.79x
 
 Testing repetition code with distance 75 and batch size 100000
 ----------------------------------------
-Original Frame Simulator time: 363.38ms
-CPU time: 363.38ms
-GPU time: 0.59ms
-GPU Speedup vs CPU: 620.35x
-GPU Speedup vs Original: 620.35x
-```
+Original Frame Simulator time: 5549.1ms
+CPU time: 4234.63ms
+GPU time: 0.391556ms
+GPU Speedup vs CPU: 10814.9x
+GPU Speedup vs Original: 14171.9x
 
 ## Implementation Details
 

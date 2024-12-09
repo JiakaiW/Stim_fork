@@ -58,8 +58,6 @@ add_library(cuda_impl STATIC
     frame_simulator_gpu.cu
     operation_batch.cu
     cuda_kernels.cu
-    debug_flags.cpp
-    debug_flags.cu
 )
 set_target_properties(cuda_impl PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON

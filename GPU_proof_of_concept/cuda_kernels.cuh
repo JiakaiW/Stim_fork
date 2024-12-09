@@ -18,4 +18,5 @@ __global__ void measure_kernel(uint64_t *x_table, uint64_t *measurements,
 
 __global__ void batch_operations_kernel(uint64_t *x_table, uint64_t *z_table, uint64_t *measurements,
                                       const size_t *controls, const size_t *targets,
-                                      const OpType *op_types, size_t num_ops, size_t num_words); 
+                                      const OpType *op_types, size_t num_ops, size_t num_words,
+                                      bool debug_output); 

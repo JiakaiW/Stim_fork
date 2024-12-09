@@ -11,7 +11,7 @@ enum class OpType {
 
 class OperationBatch {
 public:
-    static constexpr size_t MAX_BATCH = 1024;
+    static constexpr size_t MAX_BATCH = 16384;
 
 private:
     std::vector<OpType> op_types;

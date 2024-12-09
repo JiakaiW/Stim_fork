@@ -2,6 +2,9 @@
 #include "frame_simulator_base.h"
 #include "operation_batch.cuh"
 #include <cuda_runtime.h>
+#include <queue>
+
+struct QueuedOperation;  // Forward declaration
 
 class FrameSimulatorGPU : public FrameSimulatorBase {
 private:
@@ -12,12 +15,10 @@ private:
     
     size_t num_words;  // words needed for batch_size bits
     OperationBatch op_batch;
+    std::queue<QueuedOperation> operation_queue;
     
     void allocateMemory();
     void freeMemory();
-    void flush_zcx_batch();
-    void flush_h_batch();
-    void flush_m_batch();
 
 public:
     FrameSimulatorGPU(size_t num_qubits, size_t batch_size);
