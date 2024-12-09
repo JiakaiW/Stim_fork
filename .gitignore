@@ -43,3 +43,4 @@ build.ninja
 .ninja_log
 .pytest_cache
 node_modules
+build/*
