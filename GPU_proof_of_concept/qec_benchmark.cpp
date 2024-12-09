@@ -25,7 +25,7 @@ void runRepCodeCycle(FrameSimulatorBase& sim, const std::vector<size_t>& data_qu
         // Second round of CNOTs
         for (size_t i = 0; i < measurement_qubits.size(); i++) {
             gpu_sim->queue_ZCX(data_qubits[i + 1], measurement_qubits[i]);
-        }
+        } 
         
         // Queue measurements
         for (size_t m : measurement_qubits) {
