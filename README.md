@@ -11,31 +11,6 @@ The project implements frame-based simulation of quantum error correction codes.
 - C++20 compatible compiler for host code (Stim)
 - C++17 compatible NVCC for device code
 
-### Build Steps
-
-1. Clone the Stim from github
-```bash
-git clone --recursive <repository-url>
-```
-
-2. Build Stim first:
-```bash
-mkdir build && cd build
-cmake ..
-make -j
-cd ..
-```
-
-3. Build the project:
-```bash
-cd GPU_proof_of_concept
-rm -rf build
-mkdir build
-cd build
-cmake ..
-make -j
-```
-
 ### Build Structure
 
 The project is organized into three main components:
