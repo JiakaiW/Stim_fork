@@ -6,20 +6,18 @@ This is a proof-of-concept implementation of Pauli frame simulation for quantum 
 
 The project implements frame-based simulation of quantum error correction codes. It compares the performance of the stim's original implementation, a minimal CPU implementation with the minimal GPU implementation. Currently, I only have repetition codes implemented.
 
-## Building
+![representation](images/representation.png)
 
-- C++20 compatible compiler for host code (Stim)
-- C++17 compatible NVCC for device code
+![GPU](images/GPU.png)
 
-### Build Structure
+![ILP](images/ILP.png)
 
-The project is organized into three main components:
+![demo_testing](images/demo_testing.png)
 
-1. `stim_core`: A static library containing the core Stim functionality needed for QEC simulation
-2. `cuda_impl`: A static library containing the CUDA implementation of frame simulation
-3. Executables:
-   - `qec_benchmark`: For performance benchmarking
-   - `qec_test`: For running tests
+![compile](images/compile.png)
+
+![outlook](images/outlook.png)
+
 
 The build system is configured to use:
 - C++20 for host code (Stim and main executables)
