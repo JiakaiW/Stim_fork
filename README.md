@@ -1,6 +1,6 @@
 # GPU QEC Benchmark
 
-This is a proof-of-concept implementation of quantum error correction (QEC) simulation on GPU.
+This is a proof-of-concept implementation of Pauli frame simulation for quantum error correction (QEC) on GPU.
 
 ## Overview
 
